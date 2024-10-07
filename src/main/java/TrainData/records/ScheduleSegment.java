@@ -3,6 +3,7 @@ package TrainData.records;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonSetter;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -216,6 +217,7 @@ public class ScheduleSegment {
                 ", connection='" + connection + '\'' +
                 ", catering='" + catering + '\'' +
                 ", serviceBrand='" + serviceBrand + '\'' +
+                ", scheduleLocation=" + Arrays.toString(scheduleLocation) +
                 '}';
     }
 }

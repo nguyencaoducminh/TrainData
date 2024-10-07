@@ -15,10 +15,18 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.connector.file.src.FileSource;
 import org.apache.flink.connector.file.src.reader.TextLineInputFormat;
 
+import java.io.InputStream;
+import java.util.Properties;
+
 public class DataStreamJob {
 
 	public static void main(String[] args) throws Exception {
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+		Properties producerConfig = new Properties();
+		try (InputStream stream = DataStreamJob.class.getClassLoader().getResourceAsStream("producer.properties")) {
+			producerConfig.load(stream);
+		}
 
 		FileSource<String> rawSource =
 				FileSource.forRecordStreamFormat(
@@ -30,7 +38,7 @@ public class DataStreamJob {
 
 		DataStream<Tiploc> tiploc = rawStream
 				.filter(line -> line.startsWith("{\"Tiploc"))
-				.map(line -> new ObjectMapper().readValue(line.substring(12, line.length()-1), Tiploc.class));;
+				.map(line -> new ObjectMapper().readValue(line.substring(12, line.length()-1), Tiploc.class));
 
 		DataStream<Association> association = rawStream
 				.filter(line -> line.startsWith("{\"JsonAs"))
@@ -46,7 +54,7 @@ public class DataStreamJob {
 				.build();
 
 		KafkaSink<Tiploc> tiplocSink = KafkaSink.<Tiploc>builder()
-				.setBootstrapServers("localhost:9092")
+				.setKafkaProducerConfig(producerConfig)
 				.setRecordSerializer(tiplocSerializer)
 				.setDeliveryGuarantee(DeliveryGuarantee.EXACTLY_ONCE).build();
 
@@ -56,7 +64,7 @@ public class DataStreamJob {
 				.build();
 
 		KafkaSink<Association> associationSink = KafkaSink.<Association>builder()
-				.setBootstrapServers("localhost:9092")
+				.setKafkaProducerConfig(producerConfig)
 				.setRecordSerializer(associationSerializer)
 				.setDeliveryGuarantee(DeliveryGuarantee.EXACTLY_ONCE).build();
 
@@ -66,7 +74,7 @@ public class DataStreamJob {
 				.build();
 
 		KafkaSink<Schedule> scheduleSink = KafkaSink.<Schedule>builder()
-				.setBootstrapServers("localhost:9092")
+				.setKafkaProducerConfig(producerConfig)
 				.setRecordSerializer(scheduleSerializer)
 				.setDeliveryGuarantee(DeliveryGuarantee.EXACTLY_ONCE).build();
 
